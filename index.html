@@ -43,42 +43,40 @@
                 }
             }
 
-            // Hide Side Menu Items (restricted to elements within navigation areas to prevent hiding tweets)
+            // Hide Side Menu Items
             if (itemsToHide.includes(text)) {
-                let nav = el.closest('nav') || el.closest('[role="navigation"]') || el.closest('header') || el.closest('[role="banner"]');
-                if (nav) {
-                    let current = el;
-                    for (let i = 0; i < 5; i++) {
-                        if (!current || !current.parentElement) break;
-                        if (current.tagName === 'A' || current.getAttribute('role') === 'button' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
-                            if (current.style.display !== 'none') {
-                                current.style.setProperty('display', 'none', 'important');
-                            }
-                            return;
+                let current = el;
+                let isClickable = false;
+                for (let i = 0; i < 6; i++) {
+                    if (!current || !current.parentElement) break;
+                    if (current.tagName === 'A' || current.tagName === 'BUTTON' || current.getAttribute('role') === 'button' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem' || current.getAttribute('role') === 'tab') {
+                        if (current.style.display !== 'none') {
+                            current.style.setProperty('display', 'none', 'important');
                         }
-                        current = current.parentElement;
+                        isClickable = true;
+                        break;
                     }
-                    if (el.parentElement && el.parentElement.style.display !== 'none') {
-                        let wrapper = el.parentElement.parentElement || el.parentElement;
-                        wrapper.style.setProperty('display', 'none', 'important');
-                    }
+                    current = current.parentElement;
+                }
+                
+                // Fallback for non-clickable containers if they match exactly
+                if (!isClickable && el.parentElement && el.parentElement.style.display !== 'none') {
+                    let wrapper = el.parentElement.parentElement || el.parentElement;
+                    wrapper.style.setProperty('display', 'none', 'important');
                 }
             }
             
             // Auto click Tweets link once
             if (!hasClickedTweets && (text === "Tweets" || text === "ツイート")) {
-                let nav = el.closest('nav') || el.closest('[role="navigation"]') || el.closest('header') || el.closest('[role="banner"]');
-                if (nav) {
-                    let current = el;
-                    for (let i = 0; i < 5; i++) {
-                        if (!current || !current.parentElement) break;
-                        if (current.tagName === 'A' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
-                            hasClickedTweets = true;
-                            setTimeout(() => current.click(), 100);
-                            return;
-                        }
-                        current = current.parentElement;
+                let current = el;
+                for (let i = 0; i < 6; i++) {
+                    if (!current || !current.parentElement) break;
+                    if (current.tagName === 'A' || current.tagName === 'BUTTON' || current.getAttribute('role') === 'button' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem' || current.getAttribute('role') === 'tab') {
+                        hasClickedTweets = true;
+                        setTimeout(() => current.click(), 100);
+                        break;
                     }
+                    current = current.parentElement;
                 }
             }
         }
