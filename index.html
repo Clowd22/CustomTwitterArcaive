@@ -12,6 +12,8 @@
 
   // Remove unwanted menu items dynamically
   document.addEventListener("DOMContentLoaded", function() {
+    let hasClickedTweets = false;
+    
     const observer = new MutationObserver(function() {
       const itemsToHide = [
         "Home", "ホーム",
@@ -28,48 +30,55 @@
         "Account", "アカウント"
       ];
       
-      let hasClickedTweets = false;
-
-      // The labels are usually deeply nested spans. We look at all elements and hide the nearest recognizable container.
       const allElements = document.querySelectorAll('span, div');
       allElements.forEach(el => {
         if (el.children.length === 0 && el.textContent) {
             const text = el.textContent.trim();
-            // Partial match for the archive header metadata (Date generated, Estimated size)
-            if (text.includes("生成日") || text.includes("推定サイズ") || itemsToHide.includes(text)) {
-                // To be safe, we traverse up until we find an anchor or a button-like div
-                let current = el;
-                // Go up to 5 levels to find the menu item container
-                for (let i = 0; i < 5; i++) {
-                    if (!current || !current.parentElement) break;
-                    if (current.tagName === 'A' || current.getAttribute('role') === 'button' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
-                        if (current.style.display !== 'none') {
-                            current.style.setProperty('display', 'none', 'important');
-                        }
-                        return;
-                    }
-                    // For sidebar items that might just be divs without roles in inner layers
-                    current = current.parentElement;
-                }
-                
-                // Fallback: If no interactive role found, just hide the parent element containing this text completely if it seems to be a list item.
-                if (el.parentElement && el.parentElement.style.display !== 'none') {
-                    // Try to hide a slightly higher wrapper to remove padding
-                    let wrapper = el.parentElement.parentElement || el.parentElement;
+            
+            // Hide Home screen elements
+            if (text.includes("統計概要") || text.includes("生成日") || text.includes("推定サイズ") || text.includes("アーカイブに保存されている重要な情報です") || text.includes("保存されているすべてのデータを表示する場合は") || text.includes("編集済みバージョンを含む") || text.includes("ブロックしているアカウント")) {
+                let wrapper = el.parentElement;
+                if (wrapper && wrapper.style.display !== 'none') {
                     wrapper.style.setProperty('display', 'none', 'important');
                 }
-            } else if (!hasClickedTweets && (text === "Tweets" || text === "ツイート")) {
-                // Find the clickable parent for Tweets to automatically navigate there
-                let current = el;
-                for (let i = 0; i < 5; i++) {
-                    if (!current || !current.parentElement) break;
-                    if (current.tagName === 'A' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
-                        // Click it after a small delay to ensure React is ready
-                        hasClickedTweets = true;
-                        setTimeout(() => current.click(), 50);
-                        return;
+            }
+
+            // Hide Side Menu Items (restricted to elements within navigation areas to prevent hiding tweets)
+            if (itemsToHide.includes(text)) {
+                let nav = el.closest('nav') || el.closest('[role="navigation"]') || el.closest('header') || el.closest('[role="banner"]');
+                if (nav) {
+                    let current = el;
+                    for (let i = 0; i < 5; i++) {
+                        if (!current || !current.parentElement) break;
+                        if (current.tagName === 'A' || current.getAttribute('role') === 'button' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
+                            if (current.style.display !== 'none') {
+                                current.style.setProperty('display', 'none', 'important');
+                            }
+                            return;
+                        }
+                        current = current.parentElement;
                     }
-                    current = current.parentElement;
+                    if (el.parentElement && el.parentElement.style.display !== 'none') {
+                        let wrapper = el.parentElement.parentElement || el.parentElement;
+                        wrapper.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            }
+            
+            // Auto click Tweets link once
+            if (!hasClickedTweets && (text === "Tweets" || text === "ツイート")) {
+                let nav = el.closest('nav') || el.closest('[role="navigation"]') || el.closest('header') || el.closest('[role="banner"]');
+                if (nav) {
+                    let current = el;
+                    for (let i = 0; i < 5; i++) {
+                        if (!current || !current.parentElement) break;
+                        if (current.tagName === 'A' || current.getAttribute('role') === 'link' || current.getAttribute('role') === 'menuitem') {
+                            hasClickedTweets = true;
+                            setTimeout(() => current.click(), 100);
+                            return;
+                        }
+                        current = current.parentElement;
+                    }
                 }
             }
         }
